@@ -260,6 +260,9 @@ namespace Celeste_Launcher_Gui.Services
                     GenericMessageDialog.Show(Properties.Resources.DiagnosticsModeError, DialogIcon.Warning);
                 }
 
+                if (!ThirdPartyDependenciesAreSetUp())
+                    return;
+
                 string arg;
                 if (isOffline)
                     arg = $"--offline --ignore_rest LauncherLang={lang} LauncherLocale=1033";
@@ -280,6 +283,41 @@ namespace Celeste_Launcher_Gui.Services
                 Logger.Error(exception, exception.Message);
                 GenericMessageDialog.Show(Properties.Resources.StartGameError, DialogIcon.Error);
             }
+        }
+
+        private static bool ThirdPartyDependenciesAreSetUp()
+        {
+            if (!DirectXIsInstalled())
+            {
+                GenericMessageDialog.Show("Could not find DirectX", DialogIcon.Error);
+                Logger.Information("DirectX could not be found on the system");
+                return false;
+            }
+
+            if (!VCDistIsInstalled())
+            {
+                GenericMessageDialog.Show("VC Redist not installed", DialogIcon.Error);
+                Logger.Information("VC Redistribtable files could not be found");
+                return false;
+            }
+
+            return true;
+        }
+
+        private static bool DirectXIsInstalled()
+        {
+            if (LibraryChecker.X86LibraryExists("d3dx9_40.dll"))
+                return true;
+
+            return false;
+        }
+
+        private static bool VCDistIsInstalled()
+        {
+            if (LibraryChecker.X86LibraryExists("VCRUNTIME140.dll") && LibraryChecker.X86LibraryExists("MSVCP140.dll"))
+                return true;
+
+            return false;
         }
 
         public static async Task WaitForGameToExit()
